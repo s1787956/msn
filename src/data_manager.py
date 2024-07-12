@@ -167,7 +167,8 @@ class ImageNet(torchvision.datasets.ImageFolder):
         :param copy_data: whether to copy data from network file locally
         """
 
-        suffix = 'train/' if train else 'val/'
+        #suffix = 'train/' if train else 'val/'
+        suffix = ''
         data_path = None
         if copy_data:
             logger.info('copying data locally')

@@ -42,9 +42,11 @@ parser.add_argument(
     '--tasks-per-node', type=int, default=1,
     help='num. procs to per node')
 parser.add_argument(
-    '--time', type=int, default=4300,
+    '--time', type=int, default=120,
     help='time in minutes to run job')
-
+parser.add_argument(
+            '--account', type=str, default="mundi-ai",
+                help='Account to run job with')
 
 class Trainer:
 
@@ -90,11 +92,12 @@ def launch():
     executor = submitit.AutoExecutor(folder=args.folder)
     executor.update_parameters(
         slurm_partition=args.partition,
-        slurm_mem_per_gpu='55G',
+        slurm_mem_per_gpu='128',
+        slurm_account=args.account,
         timeout_min=args.time,
         nodes=args.nodes,
         tasks_per_node=args.tasks_per_node,
-        cpus_per_task=10,
+        cpus_per_task=48,
         gpus_per_node=args.tasks_per_node)
 
     config_file = args.fname
