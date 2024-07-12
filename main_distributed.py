@@ -97,7 +97,7 @@ def launch():
         timeout_min=args.time,
         nodes=args.nodes,
         tasks_per_node=args.tasks_per_node,
-        cpus_per_task=48,
+        cpus_per_task=12,
         gpus_per_node=args.tasks_per_node)
 
     config_file = args.fname
