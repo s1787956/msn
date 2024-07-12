@@ -151,7 +151,7 @@ def main(args):
     load_path = None
     if load_model:
         load_path = os.path.join(folder, r_file) if r_file is not None else latest_path
-
+    
     # -- make csv_logger
     csv_logger = CSVLogger(log_file,
                            ('%d', 'epoch'),
@@ -437,17 +437,23 @@ def load_checkpoint(
     encoder,
     target_encoder,
     opt
-):
+): 
     checkpoint = torch.load(r_path, map_location=torch.device('cpu'))
     epoch = checkpoint['epoch']
-
+    logger.info(f"Loading checkpoint from {r_path}")
     # -- loading encoder
     pretrained_dict = checkpoint['encoder']
     if ('scaling_module.bias' not in pretrained_dict) and ('scaling_bias' in pretrained_dict):
         pretrained_dict['scaling_module.bias'] = pretrained_dict['scaling_bias']
         del pretrained_dict['scaling_bias']
-    msg = encoder.load_state_dict(pretrained_dict)
+    try:
+        msg = encoder.load_state_dict(pretrained_dict)
+    except Exception as exc:
+        logger.info(f"Failed to load checkpoint due to Exception: {exc}")
+        pretrained_dict = {k.replace("module.",""):v for k,v in pretrained_dict.items()}
+        msg = encoder.load_state_dict(pretrained_dict)
     logger.info(f'loaded pretrained encoder from epoch {epoch} with msg: {msg}')
+    
 
     # -- loading target_encoder
     if target_encoder is not None:
@@ -456,7 +462,12 @@ def load_checkpoint(
         if ('scaling_module.bias' not in pretrained_dict) and ('scaling_bias' in pretrained_dict):
             pretrained_dict['scaling_module.bias'] = pretrained_dict['scaling_bias']
             del pretrained_dict['scaling_bias']
-        msg = target_encoder.load_state_dict(pretrained_dict)
+        try:
+            msg = target_encoder.load_state_dict(pretrained_dict)
+        except Exception as exc:
+            logger.info(f"Failed to load target encoder checkpoint due to Exception: {exc}")
+            pretrained_dict = {k.replace("module.",""):v for k,v in pretrained_dict.items()}
+            msg = target_encoder.load_state_dict(pretrained_dict)
         logger.info(f'loaded pretrained encoder from epoch {epoch} with msg: {msg}')
 
     # -- loading prototypes

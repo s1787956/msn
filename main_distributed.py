@@ -65,8 +65,8 @@ class Trainer:
         params = None
         with open(fname, 'r') as y_file:
             params = yaml.load(y_file, Loader=yaml.FullLoader)
-            if load_model is not None:
-                params['meta']['load_checkpoint'] = load_model
+            #if load_model is not None:
+            #    params['meta']['load_checkpoint'] = load_model
             logger.info('loaded params...')
             pp = pprint.PrettyPrinter(indent=4)
             pp.pprint(params)
