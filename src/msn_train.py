@@ -136,7 +136,7 @@ def main(args):
         pass
 
     # -- init torch distributed backend
-    world_size, rank = init_distributed()
+    world_size, rank, gpu = init_distributed()
     logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
     # if rank > 0:
     #     logger.setLevel(logging.ERROR)
@@ -244,8 +244,8 @@ def main(args):
         warmup=warmup,
         num_epochs=num_epochs)
     if world_size > 1:
-        encoder = DistributedDataParallel(encoder)
-        target_encoder = DistributedDataParallel(target_encoder)
+        encoder = DistributedDataParallel(encoder, device_ids=[gpu], broadcast_buffers=False)
+        target_encoder = DistributedDataParallel(target_encoder, device_ids=[gpu], broadcast_buffers=False)
         for p in target_encoder.parameters():
             p.requires_grad = False
 

@@ -38,6 +38,11 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
     if dist.is_available() and dist.is_initialized():
         return dist.get_world_size(), dist.get_rank()
 
+    if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
+        rank = int(os.environ["RANK"])
+        world_size = int(os.environ['WORLD_SIZE'])
+        gpu = int(os.environ['LOCAL_RANK'])
+
     rank, world_size = rank_and_world_size
     #os.environ['MASTER_ADDR'] = 'localhost'
 
@@ -45,6 +50,7 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
         try:
             world_size = int(os.environ['SLURM_NTASKS'])
             rank = int(os.environ['SLURM_PROCID'])
+            gpu = rank % torch.cuda.device_count()
             #os.environ['MASTER_ADDR'] = os.environ['HOSTNAME']
         except Exception:
             logger.info('SLURM vars not set (distributed training not available)')
@@ -61,8 +67,13 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
     except Exception:
         world_size, rank = 1, 0
         logger.info('distributed training not available')
+    
+    #torch.cuda.set_device(gpu)
+    print('| distributed init (rank {}): {}'.format(
+        rank, "env://"), flush=True)
+    torch.distributed.barrier()
 
-    return world_size, rank
+    return world_size, rank, gpu
 
 
 class WarmupCosineSchedule(object):
