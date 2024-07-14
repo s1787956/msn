@@ -43,7 +43,7 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ['WORLD_SIZE'])
-        gpu = int(os.environ['LOCAL_RANK'])
+        gpu = int(os.environ['SLURM_LOCALID'])
 
     #rank, world_size = rank_and_world_size
     #os.environ['MASTER_ADDR'] = 'localhost'
