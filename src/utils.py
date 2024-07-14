@@ -71,8 +71,8 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
         logger.info('distributed training not available')
     
     #torch.cuda.set_device(gpu)
-    print('| distributed init (rank {}): {}'.format(
-        rank, "env://"), flush=True)
+    print('| distributed init (rank {}): {}; gpu: {}'.format(
+        rank, "env://", gpu), flush=True)
     torch.distributed.barrier()
 
     return world_size, rank, gpu

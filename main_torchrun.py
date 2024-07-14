@@ -47,13 +47,13 @@ def process_main(rank, fname, world_size):
         logger.info('loaded params...')
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(params)
-
+    
     dump = os.path.join(params['logging']['folder'], 'params-msn-train.yaml')
     with open(dump, 'w') as f:
         yaml.dump(params, f)
 
-    world_size, rank = init_distributed(rank_and_world_size=(rank, world_size))
-    logger.info(f'Running... (rank: {rank}/{world_size})')
+    #world_size, rank = init_distributed(rank_and_world_size=(rank, world_size))
+    #logger.info(f'Running... (rank: {rank}/{world_size})')
 
     return msn(params)
 
