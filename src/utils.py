@@ -38,12 +38,14 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
     if dist.is_available() and dist.is_initialized():
         return dist.get_world_size(), dist.get_rank()
 
+    rank, world_size = rank_and_world_size
+
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ['WORLD_SIZE'])
         gpu = int(os.environ['LOCAL_RANK'])
 
-    rank, world_size = rank_and_world_size
+    #rank, world_size = rank_and_world_size
     #os.environ['MASTER_ADDR'] = 'localhost'
 
     if (rank is None) or (world_size is None):
