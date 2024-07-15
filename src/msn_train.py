@@ -8,14 +8,14 @@
 import os
 
 # -- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
-try:
-    # -- WARNING: IF DOING DISTRIBUTED TRAINING ON A NON-SLURM CLUSTER, MAKE
-    # --          SURE TO UPDATE THIS TO GET LOCAL-RANK ON NODE, OR ENSURE
-    # --          THAT YOUR JOBS ARE LAUNCHED WITH ONLY 1 DEVICE VISIBLE
-    # --          TO EACH PROCESS
-    os.environ['CUDA_VISIBLE_DEVICES'] = os.environ['SLURM_LOCALID']
-except Exception:
-    pass
+# try:
+#     # -- WARNING: IF DOING DISTRIBUTED TRAINING ON A NON-SLURM CLUSTER, MAKE
+#     # --          SURE TO UPDATE THIS TO GET LOCAL-RANK ON NODE, OR ENSURE
+#     # --          THAT YOUR JOBS ARE LAUNCHED WITH ONLY 1 DEVICE VISIBLE
+#     # --          TO EACH PROCESS
+#     #os.environ['CUDA_VISIBLE_DEVICES'] = os.environ['LOCAL_RANK']
+# except Exception:
+#     pass
 
 import copy
 import logging
@@ -84,7 +84,8 @@ def main(args):
     if not torch.cuda.is_available():
         device = torch.device('cpu')
     else:
-        device = torch.device('cuda:0')
+        logging.info(f"Setting device to cuda:{os.environ['LOCAL_RANK']}")
+        device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
         torch.cuda.set_device(device)
 
     # -- CRITERTION

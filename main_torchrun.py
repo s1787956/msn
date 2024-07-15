@@ -12,7 +12,7 @@ import torch.multiprocessing as mp
 import pprint
 import yaml
 
-from src.msn_train import main as msn
+from src.msn_train import main as msn_tr
 
 from src.utils import init_distributed
 
@@ -55,7 +55,7 @@ def process_main(rank, fname, world_size):
     #world_size, rank = init_distributed(rank_and_world_size=(rank, world_size))
     #logger.info(f'Running... (rank: {rank}/{world_size})')
 
-    return msn(params)
+    return msn_tr(params)
 
 
 if __name__ == '__main__':
