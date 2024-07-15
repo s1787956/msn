@@ -84,7 +84,7 @@ def main(args):
     if not torch.cuda.is_available():
         device = torch.device('cpu')
     else:
-        logging.info(f"Setting device to cuda:{os.environ['LOCAL_RANK']}")
+        logger.info(f"Setting device to cuda:{os.environ['LOCAL_RANK']}")
         device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
         torch.cuda.set_device(device)
 
@@ -139,8 +139,8 @@ def main(args):
     # -- init torch distributed backend
     world_size, rank, gpu = init_distributed()
     logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
-    # if rank > 0:
-    #     logger.setLevel(logging.ERROR)
+    if rank > 0:
+         logger.setLevel(logging.ERROR)
 
     # -- proto details
     assert num_proto > 0, 'unsupervised pre-training requires specifying prototypes'
@@ -161,7 +161,7 @@ def main(args):
                            ('%.5f', 'me_max'),
                            ('%.5f', 'ent'),
                            ('%d', 'time (ms)'))
-
+    logger.info("Initializing model..")
     # -- init model
     encoder = init_model(
         device=device,
@@ -191,6 +191,7 @@ def main(args):
         targets = targets.long().view(-1, 1).to(device)
         return torch.full((len(targets), num_classes), off_value, device=device).scatter_(1, targets, on_value)
 
+    logger.info("Creating data transforms..")
     # -- make data transforms
     transform = make_transforms(
         rand_size=rand_size,
@@ -199,13 +200,15 @@ def main(args):
         focal_views=focal_views,
         color_jitter=color_jitter)
 
+
+    logger.info("Initializing data loader...")
     # -- init data-loaders/samplers
     (unsupervised_loader,
      unsupervised_sampler) = init_data(
          transform=transform,
          batch_size=batch_size,
          pin_mem=pin_mem,
-         num_workers=num_workers,
+         num_workers=num_workers, # num_workers
          world_size=world_size,
          rank=rank,
          root_path=root_path,
