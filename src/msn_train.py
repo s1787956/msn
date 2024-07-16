@@ -21,7 +21,8 @@ import copy
 import logging
 import sys
 from collections import OrderedDict
-
+from os.path import exists
+import os
 import numpy as np
 
 import torch
@@ -107,7 +108,12 @@ def main(args):
     num_workers = 1 if 'num_workers' not in args['data'] else args['data']['num_workers']
     color_jitter = args['data']['color_jitter_strength']
     root_path = args['data']['root_path']
-    image_folder = args['data']['image_folder']
+    #image_folder = args['data']['image_folder']
+    
+    data_path = args['data']['data_path']
+    cohort = args['data']['cohort']
+    archive_path = args['data']['archive_path']
+    
     patch_drop = args['data']['patch_drop']
     rand_size = args['data']['rand_size']
     rand_views = args['data']['rand_views']
@@ -148,6 +154,18 @@ def main(args):
     log_file = os.path.join(folder, f'{tag}_r{rank}.csv')
     save_path = os.path.join(folder, f'{tag}' + '-ep{epoch}.pth.tar')
     latest_path = os.path.join(folder, f'{tag}-latest.pth.tar')
+    
+    if rank==0:
+        if not exists(root_path):
+            os.makedirs(root_path)
+        try:
+            print("Initializing ratarmount....")
+            os.system(f"ratarmount {archive_path}/{cohort}.tar {root_path}/")
+        except Exception as exc:
+            print(exc)
+    
+    torch.distributed.barrier()
+    
     load_path = None
     if load_model:
         load_path = os.path.join(folder, r_file) if r_file is not None else latest_path
@@ -208,7 +226,8 @@ def main(args):
          world_size=world_size,
          rank=rank,
          root_path=root_path,
-         image_folder=image_folder,
+         image_folder = data_path,
+         #image_folder=image_folder,
          training=True,
          copy_data=copy_data)
     ipe = len(unsupervised_loader)

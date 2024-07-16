@@ -17,6 +17,11 @@ import torch
 import torchvision.transforms as transforms
 import torchvision
 
+from torch.utils.data import Dataset
+from glob import glob
+import os
+from PIL import Image
+
 _GLOBAL_SEED = 0
 logger = getLogger()
 
@@ -36,12 +41,13 @@ def init_data(
     subset_file=None
 ):
 
-    dataset = ImageNet(
-        root=root_path,
-        image_folder=image_folder,
-        transform=transform,
-        train=training,
-        copy_data=copy_data)
+    # dataset = ImageNet(
+    #     root=root_path,
+    #     image_folder=image_folder,
+    #     transform=transform,
+    #     train=training,
+    #     copy_data=copy_data)
+    dataset = LeedsDataset(os.path.join(root_path,image_folder),transform=transform)
     if subset_file is not None:
         dataset = ImageNetSubset(dataset, subset_file)
     logger.info('ImageNet dataset created')
@@ -140,6 +146,23 @@ class MultiViewTransform(object):
         return img_views
 
 
+
+class LeedsDataset(Dataset):
+    def __init__(self,path,transform):
+        self.transform = transform
+        self.img_files = glob(f"{path}/**/*.jpg",recursive=True)
+    
+    def __len__(self):
+        return len(self.img_files)
+    
+    def __getitem__(self, idx):
+        
+        img = self.img_files[idx]
+        img = Image.open(img)
+        img = self.transform(img)
+        
+        return img, idx
+
 class ImageNet(torchvision.datasets.ImageFolder):
 
     def __init__(
@@ -152,7 +175,7 @@ class ImageNet(torchvision.datasets.ImageFolder):
         train=True,
         job_id=None,
         local_rank=None,
-        copy_data=True
+        copy_data=False
     ):
         """
         ImageNet
@@ -167,20 +190,20 @@ class ImageNet(torchvision.datasets.ImageFolder):
         :param copy_data: whether to copy data from network file locally
         """
 
-        suffix = 'train/' if train else 'val/'
+        #suffix = 'train/' if train else 'val/'
         data_path = None
-        if copy_data:
-            logger.info('copying data locally')
-            data_path = copy_imgnt_locally(
-                root=root,
-                suffix=suffix,
-                image_folder=image_folder,
-                tar_folder=tar_folder,
-                tar_file=tar_file,
-                job_id=job_id,
-                local_rank=local_rank)
+        # if copy_data:
+        #     logger.info('copying data locally')
+        #     data_path = copy_imgnt_locally(
+        #         root=root,
+        #         suffix=suffix,
+        #         image_folder=image_folder,
+        #         tar_folder=tar_folder,
+        #         tar_file=tar_file,
+        #         job_id=job_id,
+        #         local_rank=local_rank)
         if (not copy_data) or (data_path is None):
-            data_path = os.path.join(root, image_folder, suffix)
+            data_path = os.path.join(root, image_folder) # , suffix
         logger.info(f'data-path {data_path}')
 
         super(ImageNet, self).__init__(root=data_path, transform=transform)

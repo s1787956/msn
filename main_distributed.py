@@ -33,7 +33,7 @@ parser.add_argument(
     help='yaml file containing config file names to launch',
     default='configs.yaml')
 parser.add_argument(
-    '--partition', type=str,
+    '--partition', type=str,default="alpha",
     help='cluster partition to submit jobs on')
 parser.add_argument(
     '--nodes', type=int, default=1,
