@@ -6,33 +6,36 @@ criterion:
   num_proto: 1024
   start_sharpen: 0.25
   temperature: 0.1
-  batch_size: 96
+  batch_size: 200
   use_ent: true
   use_sinkhorn: true
 data:
   color_jitter_strength: 0.5
   pin_mem: true
   num_workers: 10
-  image_folder: DeepLesion
+  #image_folder: ULS23
+  image_folder: DeepLesionSSL
   label_smoothing: 0.0
   patch_drop: 0.15
   rand_size: 224
   focal_size: 96
   rand_views: 1
   focal_views: 10
-  root_path: /p/scratch/mundi-ai/
+  #root_path: /zen/marta/ct-data/ULS_data/ULS23/png_images
+  root_path: /raid/mligero/3Dclip
 logging:
-  folder: /p/scratch/mundi-ai/checkpoints/msn
+  folder: /raid/tim/checkpoints/msn
   write_tag: vit-b-dl
 meta:
   bottleneck: 1
   copy_data: false
   drop_path_rate: 0.0
   hidden_dim: 2048
-  load_checkpoint: true
+  load_checkpoint: false
   model_name: deit_base
   output_dim: 256
-  read_checkpoint: /p/scratch/mundi-ai/checkpoints/msn/vit-b-dl-latest.pth.tar 
+  #read_checkpoint: /raid/tim/checkpoints/msn/vit-b-dl-latest.pth.tar 
+  read_checkpoint: null
   use_bn: true
   use_fp16: false
   use_pred_head: false

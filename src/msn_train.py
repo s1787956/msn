@@ -7,15 +7,15 @@
 
 import os
 
-# -- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
-# try:
-#     # -- WARNING: IF DOING DISTRIBUTED TRAINING ON A NON-SLURM CLUSTER, MAKE
-#     # --          SURE TO UPDATE THIS TO GET LOCAL-RANK ON NODE, OR ENSURE
-#     # --          THAT YOUR JOBS ARE LAUNCHED WITH ONLY 1 DEVICE VISIBLE
-#     # --          TO EACH PROCESS
-#     #os.environ['CUDA_VISIBLE_DEVICES'] = os.environ['LOCAL_RANK']
-# except Exception:
-#     pass
+#-- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
+try:
+    # -- WARNING: IF DOING DISTRIBUTED TRAINING ON A NON-SLURM CLUSTER, MAKE
+    # --          SURE TO UPDATE THIS TO GET LOCAL-RANK ON NODE, OR ENSURE
+    # --          THAT YOUR JOBS ARE LAUNCHED WITH ONLY 1 DEVICE VISIBLE
+    # --          TO EACH PROCESS
+    os.environ['CUDA_VISIBLE_DEVICES'] = os.environ['LOCAL_RANK']
+except Exception:
+    pass
 
 import copy
 import logging
@@ -85,9 +85,11 @@ def main(args):
         device = torch.device('cpu')
     else:
         logger.info(f"Setting device to cuda:{os.environ['LOCAL_RANK']}")
-        device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
+        #device = torch.device(f"cuda:{os.environ['LOCAL_RANK']}")
+        #torch.cuda.set_device(device)
+        device = torch.device('cuda:0')
         torch.cuda.set_device(device)
-
+    torch.distributed.barrier()
     # -- CRITERTION
     memax_weight = 1 if 'memax_weight' not in args['criterion'] else args['criterion']['memax_weight']
     ent_weight = 1 if 'ent_weight' not in args['criterion'] else args['criterion']['ent_weight']
@@ -137,7 +139,7 @@ def main(args):
         pass
 
     # -- init torch distributed backend
-    world_size, rank, gpu = init_distributed()
+    world_size, rank = init_distributed()
     logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
     if rank > 0:
          logger.setLevel(logging.ERROR)
@@ -248,8 +250,8 @@ def main(args):
         warmup=warmup,
         num_epochs=num_epochs)
     if world_size > 1:
-        encoder = DistributedDataParallel(encoder, device_ids=[gpu], broadcast_buffers=False)
-        target_encoder = DistributedDataParallel(target_encoder, device_ids=[gpu], broadcast_buffers=False)
+        encoder = DistributedDataParallel(encoder) #, device_ids=[int(os.environ["LOCAL_RANK"])], broadcast_buffers=False
+        target_encoder = DistributedDataParallel(target_encoder) # , device_ids=[int(os.environ["LOCAL_RANK"])], broadcast_buffers=False
         for p in target_encoder.parameters():
             p.requires_grad = False
 
@@ -302,6 +304,8 @@ def main(args):
             if (epoch + 1) % checkpoint_freq == 0 \
                     or (epoch + 1) % 10 == 0 and epoch < checkpoint_freq:
                 torch.save(save_dict, save_path.format(epoch=f'{epoch + 1}'))
+    if rank == 0:
+        print(f"Found {len(unsupervised_loader.dataset)} images.")
 
     # -- TRAINING LOOP
     for epoch in range(start_epoch, num_epochs):

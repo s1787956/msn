@@ -39,43 +39,31 @@ def init_distributed(port=40111, rank_and_world_size=(None, None)):
         return dist.get_world_size(), dist.get_rank()
 
     rank, world_size = rank_and_world_size
-
-    if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-        rank = int(os.environ["RANK"])
-        world_size = int(os.environ['WORLD_SIZE'])
-        gpu = int(os.environ['LOCAL_RANK'])
-
-    #rank, world_size = rank_and_world_size
-    #os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_ADDR'] = 'localhost'
 
     if (rank is None) or (world_size is None):
         try:
             world_size = int(os.environ['SLURM_NTASKS'])
             rank = int(os.environ['SLURM_PROCID'])
-            gpu = rank % torch.cuda.device_count()
-            #os.environ['MASTER_ADDR'] = os.environ['HOSTNAME']
+            os.environ['MASTER_ADDR'] = os.environ['HOSTNAME']
         except Exception:
             logger.info('SLURM vars not set (distributed training not available)')
             world_size, rank = 1, 0
             return world_size, rank
 
     try:
-        #os.environ['MASTER_PORT'] = str(port)
+        os.environ['MASTER_PORT'] = str(port)
         torch.distributed.init_process_group(
             backend='nccl',
-            init_method="env://",
             world_size=world_size,
             rank=rank)
     except Exception:
         world_size, rank = 1, 0
         logger.info('distributed training not available')
     
-    #torch.cuda.set_device(gpu)
-    print('| distributed init (rank {}): {}; gpu: {}'.format(
-        rank, "env://", gpu), flush=True)
-    torch.distributed.barrier()
+    os.environ["LOCAL_RANK"]=str(rank)
 
-    return world_size, rank, gpu
+    return world_size, rank
 
 
 class WarmupCosineSchedule(object):
